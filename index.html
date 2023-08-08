@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+</head>
+<body>
+    <input type="file" name="" id="" onchange="upload_file(files,event)">
+    <div style="height: 20px; width: 200px; border: solid thin #aaa;">
+        <div class="js-progress" style="width: 0%; background-color: blue; color: white; height: 100%; text-align: center;">
+            0%
+        </div>
+    </div>
+</body>
+<script type="text/javascript">
+    function upload_file(files,event){
+        // console.log(files[0]);
+        let ajax=new XMLHttpRequest();
+        let stuff=new FormData();
+        let progress=document.querySelector(".js-progress");
+
+        for (let i = 0; i < files.length; i++) {
+            stuff.append("file"+i,files[i]);
+            
+        }
+        // listen for result
+        ajax.addEventListener("readystatechange",function(e){
+            if(ajax.status==200 && ajax.readyState==4){
+                alert("archivo subido");
+                event.target.value=null;
+            }
+        });
+        ajax.open("POST","api.php",true);
+        console.log("stuff", stuff);
+        ajax.send(stuff);
+
+        // listen for progress
+        ajax.upload.addEventListener("progress",function(e){
+            let percent=Math.round((e.loaded/e.total)*100);
+            progress.style.width=percent+"%";
+            progress.innerHTML=percent+"%";
+
+
+        });
+        ajax.open("POST","api.php",true);
+        ajax.send(stuff); 
+
+    }
+</script>
+
+</html>

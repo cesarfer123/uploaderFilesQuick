@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    #wrapper{
+        font-family: verdana;
+        font-size: 13px;
+        border-radius: 10px;
+        border: solid thin grey;
+        margin: auto;
+        margin-top: 100px;
+        padding: 10px;
+        max-width: 800px;
+    }
+    #gallery{
+        border-radius: 10px;
+        border: solid thin grey;
+        margin: auto;
+        margin-top: 10px;
+        padding: 10px;
+        min-height: 200px;
+    }
+    #gallery div{
+        width: 150px;
+        height: 150px;
+        margin: 4px;
+        overflow: hidden;
+        display: inline-block;
+    }
+    #gallery div img{
+        width: 100%;
+        
+        
+    }
+    .button{
+        border-radius: 5px;
+        background-color: #67adec;
+        color: white;
+        border: none;
+        padding: 1em;
+        cursor: pointer;
+        display: inline-block;
+    }
+    #uploader{
+        border: dashed 2px grey;
+        width: 400px;
+        height: 200px;
+        padding: 1em;
+        text-align: center;
+        font-size: 20px;
+        background-color: #eee;
+        position: absolute;
+        display: none;
+
+    }
+
+    #checkbox:checked ~ #uploader{
+        display: block;
+    }
+    #progress_bar{
+        height: 20px;
+        background-color: lightblue;
+        width: 0%;
+        color: white;
+    }
+</style>   
+<body>
+    <div id="wrapper">
+        <label for="checkbox" class="button">Upload</label>
+        <div><div class="progress_bar"></div></div>
+        <input type="checkbox" name="" id="checkbox" style="display: none;">
+        <div id="uploader">
+            Drag and drop files or click select
+            <input onchange="handle_files(this.files)" type="file" name="file" id="file" style="display: none;">
+            <label for="file" class="button">Selected</label>
+        </div>
+        <div id="gallery">
+            
+        </div>
+    </div>
+</body>
+</html>
+
+<script type="text/javascript">
+    let uploader=document.getElementById("uploader");
+    //dragover= arrastra
+    //dragleave= entrar
+    //drop= soltar
+    uploader.addEventListener("dragover",handle_drag);
+    uploader.addEventListener("dragleave",handle_drag);
+    uploader.addEventListener("drop",handle_drag);
+
+    function handle_drag(e){
+        e.preventDefault();
+        console.log(e.type);
+        switch (e.type) {
+            case "dragover":
+                uploader.style.borderColor="red";
+            break;
+            case "dragleave":
+                uploader.style.borderColor="grey";
+            break;
+            case "drop":
+            let files=e.dataTransfer.files;
+            handle_drop(files);
+            // console.log(files);
+            break;
+        
+            default:
+                break;
+        }
+    }
+
+    function handle_drop(files){  
+        for (let i = 0; i < files.length; i++) {
+            // console.log(files[i]);
+            send_data(files[i]);
+            
+        }
+    }
+
+    function send_data(file){
+        let ajax=new XMLHttpRequest();
+        let data=new FormData();
+        data.append("file",file);
+        ajax.addEventListener("readystatechange",function(){
+            if(ajax.readyState==4 && ajax.status==200){
+                handle_result(ajax.responseText);
+                let checkbox=document.getElementById("checkbox");
+                checkbox.checked=false;
+            }
+        });
+        ajax.open("POST","uploader.php",true)
+        ajax.send(data);
+    }
+
+    function handle_result(result){
+        let obj=JSON.parse(result);
+        let gallery=document.getElementById("gallery");
+        gallery.innerHTML="";
+        for (const key in obj) {
+            gallery.innerHTML+=`<div><img src="${obj[key]}"/></div>`;
+        }
+    }
+    read_data(); 
+    function read_data(){
+        let ajax=new XMLHttpRequest();
+        ajax.addEventListener("readystatechange",function(){
+            if(ajax.readyState==4 && ajax.status==200){
+                handle_result(ajax.responseText);
+                let progress=document.getElementById("progress_bar");
+                progress.style.width="0%";
+            }
+        });
+
+        ajax.addEventListener("progress",function(e){
+            let percent=Math.round((e.loaded/e.total*100)) || 100;
+            let progress=document.getElementById("progress_bar");
+            progress.style.width=percent + "%";
+        });
+        ajax.open("POST","uploader.php",true)
+        ajax.send();
+    }
+
+    function handle_files(files){
+        for (let i = 0; i < files.length; i++) {
+            // console.log(files[i]);
+            send_data(files[i]);
+            
+        }
+    }   
+</script>
